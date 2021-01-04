@@ -227,14 +227,35 @@ def chimera_removal(amplicon_file, minseqlen, mincount, chunk_size, kmer_size):
             yield occurence_list
 
 def abundance_greedy_clustering(amplicon_file, minseqlen, mincount, chunk_size, kmer_size):
-    pass
+    """
+    abundance_greedy_clustering fait appel à chimera_removal et réalise également des mesures d’identité à l’aide de get_identity.
+    Elle retourne une liste d’OTU, cette liste indiquera pour chaque séquence son occurrence (count).
+
+    """
+    otu = []
+    for i,seq in enumerate(chimera_removal(amplicon_file, minseqlen, mincount, chunk_size, kmer_size)):
+        if i == 0:
+            otu.append(seq)
+            print(seq)
+        else:
+            for seq_otu in otu:
+                idt = get_identity(nw.global_align(seq_otu[0], seq[0],gap_open=-1, gap_extend=-1, matrix=os.path.abspath(os.path.join(os.path.dirname(__file__),'../agc')) + "/MATCH"))
+                if idt <= 97:
+                    otu.append(seq)
+                else:
+                    pass
+    return otu
 
 def fill(text, width=80):
     """Split text with a line return to respect fasta format"""
     return os.linesep.join(text[i:i+width] for i in range(0, len(text), width))
 
 def write_OTU(OTU_list, output_file):
-    pass
+    """ write the otu list into the desired file"""
+    with open(output_file, "w") as file_out:
+        for i, otu in enumerate(OTU_list):
+            file_out.write(">OTU_" + str(i + 1) + " occurrence:" + str(otu[1]) + "\n")
+            file_out.write(fill(str(otu[0]))+"\n")
 #==============================================================
 # Main program
 #==============================================================
